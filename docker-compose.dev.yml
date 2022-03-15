@@ -1,0 +1,64 @@
+version: "3"
+services:
+  mysql:
+    image: mysql:8.0.28
+    restart: always
+    container_name: resume-db
+    env_file: .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DATABASE_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DATABASE_NAME}
+      MYSQL_USER: ${DATABASE_USERNAME}
+      MYSQL_PASSWORD: ${DATABASE_PASSWORD}
+    volumes:
+      - ./db:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      resume_net:
+        ipv4_address: 172.18.0.2
+
+  phpmyadmin:
+    image: phpmyadmin:5.1.1-apache
+    restart: always
+    container_name: resume-phpmyadmin
+    links:
+      - mysql
+    depends_on:
+      - mysql
+    env_file: .env
+    environment:
+      MYSQL_USERNAME: ${DATABASE_ROOT_NAME}
+      MYSQL_ROOT_PASSWORD: ${DATABASE_ROOT_PASSWORD}
+      PMA_HOST: mysql
+    ports:
+      - 8083:80
+    networks:
+      resume_net:
+        ipv4_address: 172.18.0.3
+
+  php:
+    build: ./backend/
+    image: php:8-fpm
+    restart: always
+    container_name: resume-backend
+    links:
+      - mysql
+    depends_on:
+      - mysql
+    volumes:
+      - ./php/:/usr/local/etc/php/
+      - ./www/:/var/www/html
+    ports:
+      - 9000:9000
+    networks:
+      resume_net:
+        ipv4_address: 172.18.0.4
+
+networks:
+  resume_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.18.0.0/24
