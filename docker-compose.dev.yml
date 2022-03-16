@@ -47,8 +47,8 @@ services:
     depends_on:
       - mysql
     volumes:
-      - ./php/:/usr/local/etc/php/
-      - ./www/:/var/www/html
+      - ./backend/:/usr/local/etc/php/
+      # - ./www/:/var/www/html
     ports:
       - 9000:9000
     networks:
