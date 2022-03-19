@@ -1,4 +1,5 @@
 import { AfterViewInit, Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import * as THREE from "three";
 
 @Component({
@@ -47,9 +48,9 @@ export class Cube3dComponent implements OnInit, AfterViewInit {
     // Animate the cube
     const animate = () => {
       requestAnimationFrame(animate);
-      cube.rotation.x += 0.01;
-      cube.rotation.y += 0.01;
-      cube.rotation.z += 0.01;
+      cube.rotation.x += 0;
+      cube.rotation.y += 0;
+      cube.rotation.z += 0;
       renderer.render(scene, camera);
     }
     animate();
@@ -97,23 +98,35 @@ export class Cube3dComponent implements OnInit, AfterViewInit {
     scene.add(pointLight);
 
     /*
-    * Add controls to cube
+    * Add car movement to cube
     */
     // Create the controls
     let direction = null;
     document.addEventListener('keydown', (event) => {
-      switch (event.keyCode) {
-        case 87: // W
-          cube.position.z -= 0.1;
+      switch (event.key) {
+        case 'w':
+          cube.translateZ(-0.1);
           break;
-        case 83: // S
-          cube.position.z += 0.1;
+        case 's': // S
+          cube.translateZ(0.1);
           break;
-        case 65: // A
-          cube.position.x -= 0.1;
+        case 'w+a': // W + A
+          cube.translateX(-0.1);
+          cube.translateZ(-0.1);
+          cube.rotation.y += 0.1;
           break;
-        case 68: // D
-          cube.position.x += 0.1;
+        case 'wd': // W + D
+          cube.translateX(0.1);
+          cube.translateZ(-0.1);
+          cube.rotation.y -= 0.1;
+          break;
+        case 'sa': // S + A
+          cube.translateX(-0.1);
+          cube.translateZ(0.1);
+          break;
+        case 's' && 'd': // S + D
+          cube.translateX(0.1);
+          cube.translateZ(0.1);
           break;
         default:
           direction = null;
@@ -123,6 +136,12 @@ export class Cube3dComponent implements OnInit, AfterViewInit {
     document.addEventListener('keyup', (event) => {
       direction = null;
     });
+
+
+
+
+
+
 
     /*
     * Define customizations for scene/camera/renderer
