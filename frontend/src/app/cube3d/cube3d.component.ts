@@ -1,5 +1,5 @@
 import { AfterViewInit, Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import * as THREE from "three";
 
 @Component({
@@ -110,23 +110,11 @@ export class Cube3dComponent implements OnInit, AfterViewInit {
         case 's': // S
           cube.translateZ(0.1);
           break;
-        case 'w+a': // W + A
-          cube.translateX(-0.1);
-          cube.translateZ(-0.1);
-          cube.rotation.y += 0.1;
+        case 'a': // A
+          cube.rotateY(0.1);
           break;
-        case 'wd': // W + D
-          cube.translateX(0.1);
-          cube.translateZ(-0.1);
-          cube.rotation.y -= 0.1;
-          break;
-        case 'sa': // S + A
-          cube.translateX(-0.1);
-          cube.translateZ(0.1);
-          break;
-        case 's' && 'd': // S + D
-          cube.translateX(0.1);
-          cube.translateZ(0.1);
+        case 'd': // D
+          cube.rotateY(-0.1);
           break;
         default:
           direction = null;
@@ -136,12 +124,6 @@ export class Cube3dComponent implements OnInit, AfterViewInit {
     document.addEventListener('keyup', (event) => {
       direction = null;
     });
-
-
-
-
-
-
 
     /*
     * Define customizations for scene/camera/renderer
