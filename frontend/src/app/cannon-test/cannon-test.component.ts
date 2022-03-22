@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import * as STATS from 'stats.ts';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import * as CANNON from 'cannon-es';
@@ -14,6 +15,12 @@ export class CannonTestComponent implements OnInit {
   constructor() { }
 
   ngOnInit() {
+
+    // Show fps
+    var stats = new STATS.Stats();
+    stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
+    document.body.appendChild(stats.dom);
+
 
     /*************/
     /* THREE.js */
@@ -59,6 +66,22 @@ export class CannonTestComponent implements OnInit {
     const boxMesh = new THREE.Mesh(boxGeo, boxMat);
     scene.add(boxMesh);
 
+    /*
+    * Create a sphere to latter add physics to it
+    */
+    const sphereGeo = new THREE.SphereGeometry(1, 32, 32);
+    const sphereMat = new THREE.MeshBasicMaterial({
+      color: 0x0000ff,
+      wireframe: true
+    });
+    const sphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
+    scene.add(sphereMesh);
+
+
+
+
+
+
 
     /*************/
     /* CANNON.js */
@@ -70,7 +93,6 @@ export class CannonTestComponent implements OnInit {
     const world = new CANNON.World({
       gravity: new CANNON.Vec3(0, -9.82, 0) // simulate earth gravity m/s²
     });
-    const timeStep = 1.0 / 60.0; // simulate time in seconds
 
     /*
     * Add physics to the ground
@@ -89,9 +111,19 @@ export class CannonTestComponent implements OnInit {
     const boxBody = new CANNON.Body({
       mass: 1,
       shape: new CANNON.Box(new CANNON.Vec3(1, 1, 1)),
-      position: new CANNON.Vec3(0, 20, 0)
+      position: new CANNON.Vec3(0, 5, 0)
     });
     world.addBody(boxBody);
+
+    /*
+    * Add physics to the sphere
+    */
+    const sphereBody = new CANNON.Body({
+      mass: 1,
+      shape: new CANNON.Sphere(1),
+      position: new CANNON.Vec3(1.5, 15, 0)
+    });
+    world.addBody(sphereBody);
 
 
 
@@ -101,23 +133,40 @@ export class CannonTestComponent implements OnInit {
 
 
     /*
-    * Start the simulation loop
+    * Start the simulation loop (locked to 60fps)
     */
-    function animate() {
-      world.step(timeStep);
+    let clock = new THREE.Clock();
+    let delta = 0; // time since last frame
+    let interval = 1 / 60; // 60 fps
 
-      // groundMesh.position.copy(groundBody.position); // update the ground position
-      // groundMesh.quaternion.copy(groundBody.quaternion); // update the ground rotation
+    function animate() {
+      stats.begin(); // begin measuring fps
+
+      world.fixedStep(1 / 60) // step the world (seconds per frame)
+
+      // Update positions of the meshes
+      // Position of the ground
       groundMesh.position.x = groundBody.position.x;
       groundMesh.position.y = groundBody.position.y;
       groundMesh.position.z = groundBody.position.z;
-
+      // Position of the box
       boxMesh.position.x = boxBody.position.x;
       boxMesh.position.y = boxBody.position.y;
       boxMesh.position.z = boxBody.position.z;
+      // Position of the sphere
+      sphereMesh.position.x = sphereBody.position.x;
+      sphereMesh.position.y = sphereBody.position.y;
+      sphereMesh.position.z = sphereBody.position.z;
 
-      requestAnimationFrame(animate);
-      renderer.render(scene, camera);
+      requestAnimationFrame(animate); // request next frame
+      delta += clock.getDelta(); // get time since last frame
+
+      if (delta > interval) { // if enough time has passed
+        renderer.render(scene, camera); // render scene
+        delta = delta % interval; // reset delta
+
+        stats.end(); // end measuring fps
+      }
     }
     renderer.setAnimationLoop(animate);
 
