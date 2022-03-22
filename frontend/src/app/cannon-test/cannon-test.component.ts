@@ -89,7 +89,7 @@ export class CannonTestComponent implements OnInit {
     const boxBody = new CANNON.Body({
       mass: 1,
       shape: new CANNON.Box(new CANNON.Vec3(1, 1, 1)),
-      position: new CANNON.Vec3(1, 20, 0)
+      position: new CANNON.Vec3(0, 20, 0)
     });
     world.addBody(boxBody);
 
