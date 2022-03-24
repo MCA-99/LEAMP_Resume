@@ -69,9 +69,9 @@ export class CannonTestComponent implements OnInit {
     /*
     * Create a sphere to latter add physics to it
     */
-    const sphereGeo = new THREE.SphereGeometry(1, 32, 32);
+    const sphereGeo = new THREE.SphereGeometry(2, 32, 32);
     const sphereMat = new THREE.MeshBasicMaterial({
-      color: 0x0000ff,
+      color: 0xff0000,
       wireframe: true
     });
     const sphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
@@ -98,11 +98,11 @@ export class CannonTestComponent implements OnInit {
     * Add physics to the ground
     */
     const groundBody = new CANNON.Body({
-      shape: new CANNON.Plane(),
-      type: CANNON.Body.STATIC,
-      position: new CANNON.Vec3(0, 0, 0)
+      // shape: new CANNON.Plane(), // (crea un suelo infinito)
+      shape: new CANNON.Box(new CANNON.Vec3(15, 15, 0.1)),
+      type: CANNON.Body.STATIC
     });
-    groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+    groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
     world.addBody(groundBody);
 
     /*
@@ -111,7 +111,7 @@ export class CannonTestComponent implements OnInit {
     const boxBody = new CANNON.Body({
       mass: 1,
       shape: new CANNON.Box(new CANNON.Vec3(1, 1, 1)),
-      position: new CANNON.Vec3(0, 5, 0)
+      position: new CANNON.Vec3(1, 20, 0)
     });
     world.addBody(boxBody);
 
@@ -119,9 +119,9 @@ export class CannonTestComponent implements OnInit {
     * Add physics to the sphere
     */
     const sphereBody = new CANNON.Body({
-      mass: 1,
-      shape: new CANNON.Sphere(1),
-      position: new CANNON.Vec3(1.5, 15, 0)
+      mass: 10,
+      shape: new CANNON.Sphere(2),
+      position: new CANNON.Vec3(0, 15, 0)
     });
     world.addBody(sphereBody);
 
@@ -146,6 +146,9 @@ export class CannonTestComponent implements OnInit {
 
       // Update positions of the meshes
       // Position of the ground
+      // groundMesh.position.copy(groundBody.position);
+      // groundMesh.quaternion.copy(groundBody.quaternion);
+
       groundMesh.position.x = groundBody.position.x;
       groundMesh.position.y = groundBody.position.y;
       groundMesh.position.z = groundBody.position.z;
@@ -153,6 +156,7 @@ export class CannonTestComponent implements OnInit {
       boxMesh.position.x = boxBody.position.x;
       boxMesh.position.y = boxBody.position.y;
       boxMesh.position.z = boxBody.position.z;
+      boxMesh.rotation.x = boxBody.rotation.x;
       // Position of the sphere
       sphereMesh.position.x = sphereBody.position.x;
       sphereMesh.position.y = sphereBody.position.y;
