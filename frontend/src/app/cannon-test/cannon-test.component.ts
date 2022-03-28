@@ -146,8 +146,8 @@ export class CannonTestComponent implements OnInit {
 
       // Update positions of the meshes
       // Position of the ground
-      // groundMesh.position.copy(groundBody.position);
-      // groundMesh.quaternion.copy(groundBody.quaternion);
+      groundMesh.position.copy(groundBody.position);
+      groundMesh.quaternion.copy(groundBody.quaternion);
 
       groundMesh.position.x = groundBody.position.x;
       groundMesh.position.y = groundBody.position.y;
@@ -156,7 +156,7 @@ export class CannonTestComponent implements OnInit {
       boxMesh.position.x = boxBody.position.x;
       boxMesh.position.y = boxBody.position.y;
       boxMesh.position.z = boxBody.position.z;
-      boxMesh.rotation.x = boxBody.rotation.x;
+
       // Position of the sphere
       sphereMesh.position.x = sphereBody.position.x;
       sphereMesh.position.y = sphereBody.position.y;
