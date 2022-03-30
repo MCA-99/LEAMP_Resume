@@ -127,8 +127,28 @@ export class CannonTestComponent implements OnInit {
 
 
 
+    /*
+    * Update positions of the meshes with the bodies
+    */
+    function updatePhysics() {
+      // Ground
+      groundMesh.position.x = groundBody.position.x;
+      groundMesh.position.y = groundBody.position.y;
+      groundMesh.position.z = groundBody.position.z;
 
+      // Box
+      boxMesh.position.copy(boxBody.position);
+      // boxMesh.quaternion.copy(boxBody.quaternion);
 
+      boxMesh.position.x = boxBody.position.x;
+      boxMesh.position.y = boxBody.position.y;
+      boxMesh.position.z = boxBody.position.z;
+
+      // Sphere
+      sphereMesh.position.x = sphereBody.position.x;
+      sphereMesh.position.y = sphereBody.position.y;
+      sphereMesh.position.z = sphereBody.position.z;
+    }
 
 
 
@@ -144,28 +164,11 @@ export class CannonTestComponent implements OnInit {
 
       world.fixedStep(1 / 60) // step the world (seconds per frame)
 
-      // Update positions of the meshes
-      // Position of the ground
-      groundMesh.position.copy(groundBody.position);
-      groundMesh.quaternion.copy(groundBody.quaternion);
-
-      groundMesh.position.x = groundBody.position.x;
-      groundMesh.position.y = groundBody.position.y;
-      groundMesh.position.z = groundBody.position.z;
-      // Position of the box
-      boxMesh.position.x = boxBody.position.x;
-      boxMesh.position.y = boxBody.position.y;
-      boxMesh.position.z = boxBody.position.z;
-
-      // Position of the sphere
-      sphereMesh.position.x = sphereBody.position.x;
-      sphereMesh.position.y = sphereBody.position.y;
-      sphereMesh.position.z = sphereBody.position.z;
-
       requestAnimationFrame(animate); // request next frame
       delta += clock.getDelta(); // get time since last frame
 
       if (delta > interval) { // if enough time has passed
+        updatePhysics();
         renderer.render(scene, camera); // render scene
         delta = delta % interval; // reset delta
 
