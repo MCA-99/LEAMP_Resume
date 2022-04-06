@@ -137,8 +137,9 @@ export class CannonTestComponent implements OnInit {
       groundMesh.position.z = groundBody.position.z;
 
       // Box
-      boxMesh.position.copy(boxBody.position);
+      // boxMesh.position.copy(boxBody.position);
       // boxMesh.quaternion.copy(boxBody.quaternion);
+
 
       boxMesh.position.x = boxBody.position.x;
       boxMesh.position.y = boxBody.position.y;

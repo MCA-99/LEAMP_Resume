@@ -5,12 +5,14 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { Cube3dComponent } from './cube3d/cube3d.component';
 import { CannonTestComponent } from './cannon-test/cannon-test.component';
+import { AmmoTestComponent } from './ammo-test/ammo-test.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     Cube3dComponent,
-    CannonTestComponent
+    CannonTestComponent,
+    AmmoTestComponent
   ],
   imports: [
     BrowserModule,
