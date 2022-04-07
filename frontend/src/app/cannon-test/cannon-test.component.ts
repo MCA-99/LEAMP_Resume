@@ -46,7 +46,7 @@ export class CannonTestComponent implements OnInit {
     /*
     * Create a ground plane to latter add physics to it
     */
-    const groundGeo = new THREE.BoxGeometry(30, 0, 30);
+    const groundGeo = new THREE.BoxGeometry(30, 30, 0);
     const groundMat = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       side: THREE.DoubleSide,
@@ -91,7 +91,7 @@ export class CannonTestComponent implements OnInit {
     * The world defines the physics of the simulation
     */
     const world = new CANNON.World({
-      gravity: new CANNON.Vec3(0, -9.82, 0) // simulate earth gravity m/s²
+      gravity: new CANNON.Vec3(0, -9.81, 0) // simulate earth gravity m/s²
     });
 
     /*
@@ -131,24 +131,13 @@ export class CannonTestComponent implements OnInit {
     * Update positions of the meshes with the bodies
     */
     function updatePhysics() {
-      // Ground
-      groundMesh.position.x = groundBody.position.x;
-      groundMesh.position.y = groundBody.position.y;
-      groundMesh.position.z = groundBody.position.z;
+      const listOfMesh = [groundMesh, boxMesh, sphereMesh]; // list of all meshes used in the scene
+      const listOfBodies = [groundBody, boxBody, sphereBody]; // list of all bodies used in the scene
 
-      // Box
-      // boxMesh.position.copy(boxBody.position);
-      // boxMesh.quaternion.copy(boxBody.quaternion);
-
-
-      boxMesh.position.x = boxBody.position.x;
-      boxMesh.position.y = boxBody.position.y;
-      boxMesh.position.z = boxBody.position.z;
-
-      // Sphere
-      sphereMesh.position.x = sphereBody.position.x;
-      sphereMesh.position.y = sphereBody.position.y;
-      sphereMesh.position.z = sphereBody.position.z;
+      for (let i = 0; i < listOfMesh.length; i++) {
+        listOfMesh[i].position.set(listOfBodies[i].position.x, listOfBodies[i].position.y, listOfBodies[i].position.z);
+        listOfMesh[i].quaternion.set(listOfBodies[i].quaternion.x, listOfBodies[i].quaternion.y, listOfBodies[i].quaternion.z, listOfBodies[i].quaternion.w);
+      }
     }
 
 
