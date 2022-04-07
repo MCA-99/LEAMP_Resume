@@ -46,7 +46,7 @@ export class CannonTestComponent implements OnInit {
     /*
     * Create a ground plane to latter add physics to it
     */
-    const groundGeo = new THREE.BoxGeometry(30, 30, 0);
+    const groundGeo = new THREE.BoxGeometry(50, 50, 0);
     const groundMat = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       side: THREE.DoubleSide,
@@ -69,7 +69,7 @@ export class CannonTestComponent implements OnInit {
     /*
     * Create a sphere to latter add physics to it
     */
-    const sphereGeo = new THREE.SphereGeometry(2, 32, 32);
+    const sphereGeo = new THREE.SphereGeometry(2, 16, 16);
     const sphereMat = new THREE.MeshBasicMaterial({
       color: 0xff0000,
       wireframe: true
@@ -97,10 +97,14 @@ export class CannonTestComponent implements OnInit {
     /*
     * Add physics to the ground
     */
+    const groundPhysMat = new CANNON.Material();
+    const objectPhysMat = new CANNON.Material();
+
     const groundBody = new CANNON.Body({
       // shape: new CANNON.Plane(), // (crea un suelo infinito)
-      shape: new CANNON.Box(new CANNON.Vec3(15, 15, 0.1)),
-      type: CANNON.Body.STATIC
+      shape: new CANNON.Box(new CANNON.Vec3(25, 25, 0.1)),
+      type: CANNON.Body.STATIC,
+      material: groundPhysMat
     });
     groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
     world.addBody(groundBody);
@@ -111,9 +115,13 @@ export class CannonTestComponent implements OnInit {
     const boxBody = new CANNON.Body({
       mass: 1,
       shape: new CANNON.Box(new CANNON.Vec3(1, 1, 1)),
-      position: new CANNON.Vec3(1, 20, 0)
+      position: new CANNON.Vec3(1, 20, 0),
+      material: objectPhysMat
     });
     world.addBody(boxBody);
+    boxBody.linearDamping = 0.05;
+    boxBody.angularDamping = 0.05;
+    boxBody.angularVelocity.set(0, 5, 0);
 
     /*
     * Add physics to the sphere
@@ -121,9 +129,26 @@ export class CannonTestComponent implements OnInit {
     const sphereBody = new CANNON.Body({
       mass: 10,
       shape: new CANNON.Sphere(2),
-      position: new CANNON.Vec3(0, 15, 0)
+      position: new CANNON.Vec3(0, 15, 0),
+      material: objectPhysMat
     });
     world.addBody(sphereBody);
+    sphereBody.linearDamping = 0.05;
+    sphereBody.angularDamping = 0.05;
+
+    /*
+    * Define physics properties for created materials
+    */
+    const contactMat = new CANNON.ContactMaterial(
+      groundPhysMat,
+      objectPhysMat,
+      { friction: 0.05, restitution: 0.2 }
+    );
+    world.addContactMaterial(contactMat);
+
+
+
+
 
 
 
@@ -139,8 +164,6 @@ export class CannonTestComponent implements OnInit {
         listOfMesh[i].quaternion.set(listOfBodies[i].quaternion.x, listOfBodies[i].quaternion.y, listOfBodies[i].quaternion.z, listOfBodies[i].quaternion.w);
       }
     }
-
-
 
     /*
     * Start the simulation loop (locked to 60fps)
