@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import * as STATS from 'stats.ts';
-import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as CANNON from 'cannon-es';
-
 
 @Component({
   selector: 'app-cannon-test',
@@ -58,13 +58,19 @@ export class CannonTestComponent implements OnInit {
     /*
     * Create a box to latter add physics to it
     */
-    const boxGeo = new THREE.BoxGeometry(2, 2, 2);
-    const boxMat = new THREE.MeshBasicMaterial({
-      color: 0x00ff00,
-      wireframe: true
+    const boxModel = new GLTFLoader();
+    boxModel.load('assets/building_house.glb', (gltf) => {
+      const boxGeo = new THREE.BoxGeometry(2, 2, 2);
+      const boxMat = new THREE.MeshBasicMaterial({
+        color: 0x00ff00,
+        wireframe: true
+      });
+      const boxMesh = new THREE.Mesh(boxGeo, boxMat);
+      scene.add(boxMesh);
     });
-    const boxMesh = new THREE.Mesh(boxGeo, boxMat);
-    scene.add(boxMesh);
+
+    // TODO : add a box with model
+
 
     /*
     * Create a sphere to latter add physics to it
@@ -79,6 +85,19 @@ export class CannonTestComponent implements OnInit {
 
 
 
+
+    /*
+    * Add light to the scene
+    */
+    // Ambient light
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+    scene.add(ambientLight);
+    // Directional light
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 2.5);
+    directionalLight.position.set(-5, 25, 8);
+    const helper = new THREE.DirectionalLightHelper(directionalLight, 1);
+    scene.add(directionalLight);
+    scene.add(helper);
 
 
 
