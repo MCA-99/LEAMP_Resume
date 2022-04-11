@@ -44,6 +44,19 @@ export class CannonTestComponent implements OnInit {
     orbit.update();
 
     /*
+    * Add light to the scene
+    */
+    // Ambient light
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+    scene.add(ambientLight);
+    // Directional light
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 2.5);
+    directionalLight.position.set(-5, 25, 8);
+    const helper = new THREE.DirectionalLightHelper(directionalLight, 1);
+    scene.add(directionalLight);
+    scene.add(helper);
+
+    /*
     * Create a ground plane to latter add physics to it
     */
     const groundGeo = new THREE.BoxGeometry(50, 50, 0);
@@ -58,19 +71,14 @@ export class CannonTestComponent implements OnInit {
     /*
     * Create a box to latter add physics to it
     */
-    const boxModel = new GLTFLoader();
-    boxModel.load('assets/building_house.glb', (gltf) => {
-      const boxGeo = new THREE.BoxGeometry(2, 2, 2);
-      const boxMat = new THREE.MeshBasicMaterial({
-        color: 0x00ff00,
-        wireframe: true
-      });
-      const boxMesh = new THREE.Mesh(boxGeo, boxMat);
-      scene.add(boxMesh);
+
+    const boxGeo = new THREE.BoxGeometry(2, 2, 2);
+    const boxMat = new THREE.MeshBasicMaterial({
+      color: 0x00ff00,
+      wireframe: true
     });
-
-    // TODO : add a box with model
-
+    const boxMesh = new THREE.Mesh(boxGeo, boxMat);
+    scene.add(boxMesh);
 
     /*
     * Create a sphere to latter add physics to it
@@ -83,21 +91,25 @@ export class CannonTestComponent implements OnInit {
     const sphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
     scene.add(sphereMesh);
 
-
-
-
     /*
-    * Add light to the scene
+    * Create a box with physics to add a custom 3d model to it
     */
-    // Ambient light
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
-    scene.add(ambientLight);
-    // Directional light
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 2.5);
-    directionalLight.position.set(-5, 25, 8);
-    const helper = new THREE.DirectionalLightHelper(directionalLight, 1);
-    scene.add(directionalLight);
-    scene.add(helper);
+    const boxGeo3d = new THREE.BoxGeometry(2, 2, 2);
+    const boxMat3d = new THREE.MeshBasicMaterial({
+      color: 0x0000ff,
+      wireframe: true
+    });
+    const boxMesh3d = new THREE.Mesh(boxGeo3d, boxMat3d);
+
+    const boxModel3d = new GLTFLoader();
+    boxModel3d.load('assets/building_house.glb', (gltf) => {
+      gltf.scene.scale.set(2, 2, 2);
+      boxMesh3d.add(gltf.scene);
+    });
+
+    scene.add(boxMesh3d);
+
+
 
 
 
@@ -156,6 +168,19 @@ export class CannonTestComponent implements OnInit {
     sphereBody.angularDamping = 0.05;
 
     /*
+    * Add physics to the box with 3d model
+    */
+    const boxBody3d = new CANNON.Body({
+      mass: 0,
+      shape: new CANNON.Box(new CANNON.Vec3(1, 1, 1)),
+      position: new CANNON.Vec3(21, 0, -1),
+      material: objectPhysMat
+    });
+    world.addBody(boxBody3d);
+    boxBody3d.linearDamping = 0.05;
+    boxBody3d.angularDamping = 0.05;
+
+    /*
     * Define physics properties for created materials
     */
     const contactMat = new CANNON.ContactMaterial(
@@ -175,8 +200,8 @@ export class CannonTestComponent implements OnInit {
     * Update positions of the meshes with the bodies
     */
     function updatePhysics() {
-      const listOfMesh = [groundMesh, boxMesh, sphereMesh]; // list of all meshes used in the scene
-      const listOfBodies = [groundBody, boxBody, sphereBody]; // list of all bodies used in the scene
+      const listOfMesh = [groundMesh, boxMesh, sphereMesh, boxMesh3d]; // list of all meshes used in the scene
+      const listOfBodies = [groundBody, boxBody, sphereBody, boxBody3d]; // list of all bodies used in the scene
 
       for (let i = 0; i < listOfMesh.length; i++) {
         listOfMesh[i].position.set(listOfBodies[i].position.x, listOfBodies[i].position.y, listOfBodies[i].position.z);
