@@ -109,6 +109,17 @@ export class CannonTestComponent implements OnInit {
 
     scene.add(boxMesh3d);
 
+    /*
+    * Create a player to latter add physics to it
+    */
+    const playerGeo = new THREE.BoxGeometry(2, 2, 2);
+    const playerMat = new THREE.MeshBasicMaterial({
+      color: '#fffb00',
+      wireframe: true
+    });
+    const playerMesh = new THREE.Mesh(playerGeo, playerMat);
+    scene.add(playerMesh);
+
 
 
 
@@ -181,6 +192,19 @@ export class CannonTestComponent implements OnInit {
     boxBody3d.angularDamping = 0.05;
 
     /*
+    * Add physics to the player
+    */
+    const playerBody = new CANNON.Body({
+      mass: 1,
+      shape: new CANNON.Box(new CANNON.Vec3(1, 1, 1)),
+      position: new CANNON.Vec3(-20, 2, -20),
+      material: objectPhysMat
+    });
+    world.addBody(playerBody);
+    playerBody.linearDamping = 0.05;
+    playerBody.angularDamping = 1;
+
+    /*
     * Define physics properties for created materials
     */
     const contactMat = new CANNON.ContactMaterial(
@@ -189,6 +213,25 @@ export class CannonTestComponent implements OnInit {
       { friction: 0.05, restitution: 0.2 }
     );
     world.addContactMaterial(contactMat);
+
+    /*
+    * Moove the player with the arrow keys
+    */
+    const movePlayer = (e: { keyCode: any; }) => {
+      const key = e.keyCode;
+      const speed = 1;
+      if (key === 37) { // right
+        // rotate player to the right
+        playerBody.angularVelocity.set(0, speed, 0);
+      } else if (key === 39) { // left
+        playerBody.velocity.x -= speed;
+      } else if (key === 38) { // down
+        playerBody.velocity.z += speed;
+      } else if (key === 40) { // up
+        playerBody.velocity.z -= speed;
+      }
+    };
+    document.addEventListener('keydown', movePlayer);
 
 
 
@@ -200,8 +243,8 @@ export class CannonTestComponent implements OnInit {
     * Update positions of the meshes with the bodies
     */
     function updatePhysics() {
-      const listOfMesh = [groundMesh, boxMesh, sphereMesh, boxMesh3d]; // list of all meshes used in the scene
-      const listOfBodies = [groundBody, boxBody, sphereBody, boxBody3d]; // list of all bodies used in the scene
+      const listOfMesh = [groundMesh, boxMesh, sphereMesh, boxMesh3d, playerMesh]; // list of all meshes used in the scene
+      const listOfBodies = [groundBody, boxBody, sphereBody, boxBody3d, playerBody]; // list of all bodies used in the scene
 
       for (let i = 0; i < listOfMesh.length; i++) {
         listOfMesh[i].position.set(listOfBodies[i].position.x, listOfBodies[i].position.y, listOfBodies[i].position.z);
