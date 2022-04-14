@@ -39,9 +39,9 @@ export class CannonTestComponent implements OnInit {
       0.1, // near
       1000 // far
     );
-    const orbit = new OrbitControls(camera, renderer.domElement);
-    camera.position.set(0, 20, -30);
-    orbit.update();
+    // const orbit = new OrbitControls(camera, renderer.domElement);
+    // camera.position.set(0, 20, -30);
+    // orbit.update();
 
     /*
     * Add light to the scene
@@ -94,7 +94,7 @@ export class CannonTestComponent implements OnInit {
     /*
     * Create a box with physics to add a custom 3d model to it
     */
-    const boxGeo3d = new THREE.BoxGeometry(2, 2, 2);
+    const boxGeo3d = new THREE.BoxGeometry(2, 10, 2);
     const boxMat3d = new THREE.MeshBasicMaterial({
       color: 0x0000ff,
       wireframe: true
@@ -102,8 +102,9 @@ export class CannonTestComponent implements OnInit {
     const boxMesh3d = new THREE.Mesh(boxGeo3d, boxMat3d);
 
     const boxModel3d = new GLTFLoader();
-    boxModel3d.load('assets/building_house.glb', (gltf) => {
-      gltf.scene.scale.set(2, 2, 2);
+    boxModel3d.load('assets/tree.glb', (gltf) => {
+      gltf.scene.scale.set(0.008, 0.01, 0.008);
+      gltf.scene.position.set(0, -5, 0);
       boxMesh3d.add(gltf.scene);
     });
 
@@ -112,12 +113,20 @@ export class CannonTestComponent implements OnInit {
     /*
     * Create a player to latter add physics to it
     */
-    const playerGeo = new THREE.BoxGeometry(2, 2, 2);
+    const playerGeo = new THREE.BoxGeometry(2, 2, 3);
     const playerMat = new THREE.MeshBasicMaterial({
       color: '#fffb00',
       wireframe: true
     });
     const playerMesh = new THREE.Mesh(playerGeo, playerMat);
+
+    const playerModel = new GLTFLoader();
+    playerModel.load('assets/car.glb', (gltf) => {
+      gltf.scene.scale.set(0.003, 0.003, 0.003);
+      gltf.scene.position.set(0, -1, 0);
+      playerMesh.add(gltf.scene);
+    });
+
     scene.add(playerMesh);
 
 
@@ -183,8 +192,8 @@ export class CannonTestComponent implements OnInit {
     */
     const boxBody3d = new CANNON.Body({
       mass: 0,
-      shape: new CANNON.Box(new CANNON.Vec3(1, 1, 1)),
-      position: new CANNON.Vec3(21, 0, -1),
+      shape: new CANNON.Box(new CANNON.Vec3(1, 5, 1)),
+      position: new CANNON.Vec3(21, 5, 0),
       material: objectPhysMat
     });
     world.addBody(boxBody3d);
@@ -196,13 +205,14 @@ export class CannonTestComponent implements OnInit {
     */
     const playerBody = new CANNON.Body({
       mass: 1,
-      shape: new CANNON.Box(new CANNON.Vec3(1, 1, 1)),
+      shape: new CANNON.Box(new CANNON.Vec3(1, 1, 1.5)),
       position: new CANNON.Vec3(-20, 2, -20),
       material: objectPhysMat
     });
     world.addBody(playerBody);
     playerBody.linearDamping = 0.05;
     playerBody.angularDamping = 1;
+    playerBody.fixedRotation = true;
 
     /*
     * Define physics properties for created materials
@@ -210,25 +220,33 @@ export class CannonTestComponent implements OnInit {
     const contactMat = new CANNON.ContactMaterial(
       groundPhysMat,
       objectPhysMat,
-      { friction: 0.05, restitution: 0.2 }
+      { friction: 0.005, restitution: 0.2 }
     );
     world.addContactMaterial(contactMat);
 
+
+
+
+
+
+    /*******************/
+    /* PLAYER MOVEMENT */
+    /*******************/
     /*
-    * Moove the player with the arrow keys
+    * Add keyboard controls to player
     */
     const movePlayer = (e: { keyCode: any; }) => {
       const key = e.keyCode;
-      const speed = 1;
-      if (key === 37) { // right
-        // rotate player to the right
-        playerBody.angularVelocity.set(0, speed, 0);
-      } else if (key === 39) { // left
-        playerBody.velocity.x -= speed;
-      } else if (key === 38) { // down
-        playerBody.velocity.z += speed;
-      } else if (key === 40) { // up
-        playerBody.velocity.z -= speed;
+      const speed = 10;
+
+      if (key === 37) { // left
+        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, 5, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
+      } else if (key === 39) { // right
+        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, -5, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
+      } else if (key === 38) { // up
+        playerBody.quaternion.vmult(new CANNON.Vec3(0, 0, speed), playerBody.velocity);
+      } else if (key === 40) { // down
+        playerBody.quaternion.vmult(new CANNON.Vec3(0, 0, -speed), playerBody.velocity);
       }
     };
     document.addEventListener('keydown', movePlayer);
@@ -238,6 +256,15 @@ export class CannonTestComponent implements OnInit {
 
 
 
+    /*
+    * Update position of the camera to follow the player
+    */
+    function updateCameraPosition() {
+      const playerPosition = new THREE.Vector3();
+      playerMesh.getWorldPosition(playerPosition);
+      camera.position.copy(playerPosition).add(new THREE.Vector3(-5, 15, -15));
+      camera.lookAt(playerPosition);
+    }
 
     /*
     * Update positions of the meshes with the bodies
@@ -269,6 +296,7 @@ export class CannonTestComponent implements OnInit {
 
       if (delta > interval) { // if enough time has passed
         updatePhysics();
+        updateCameraPosition();
         renderer.render(scene, camera); // render scene
         delta = delta % interval; // reset delta
 
