@@ -4,6 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as CANNON from 'cannon-es';
+import { elementAt } from 'rxjs';
 
 @Component({
   selector: 'app-cannon-test',
@@ -235,22 +236,70 @@ export class CannonTestComponent implements OnInit {
     /*
     * Add keyboard controls to player
     */
+    var keysPressed: Array<any> = [];
+    let speed = 0;
+    let maxSpeed = 10;
+
+
     const movePlayer = (e: { keyCode: any; }) => {
       const key = e.keyCode;
-      const speed = 10;
+      keysPressed[key] = true;
 
-      if (key === 37) { // left
-        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, 5, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
-      } else if (key === 39) { // right
-        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, -5, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
-      } else if (key === 38) { // up
+
+      // console.log(keysPressed);
+
+      // if (keysPressed[37] == true) { // left
+      //   playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, 5, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
+      // }
+      // if (keysPressed[39]) { // right
+      //   playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, -5, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
+      // }
+      if (keysPressed[38]) { // up
+        if (speed < maxSpeed) {
+          speed++;
+        }
         playerBody.quaternion.vmult(new CANNON.Vec3(0, 0, speed), playerBody.velocity);
-      } else if (key === 40) { // down
+      }
+      if (keysPressed[40]) { // down
+        if (speed < maxSpeed) {
+          speed++;
+        }
         playerBody.quaternion.vmult(new CANNON.Vec3(0, 0, -speed), playerBody.velocity);
       }
-    };
+      if (keysPressed[37] && keysPressed[38]) { // left + up
+        if (speed < maxSpeed) {
+          speed++;
+        }
+        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, 3, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
+        playerBody.quaternion.vmult(new CANNON.Vec3(0, 0, speed), playerBody.velocity);
+      }
+      if (keysPressed[39] && keysPressed[38]) { // right + up
+        if (speed < maxSpeed) {
+          speed++;
+        }
+        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, -3, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
+        playerBody.quaternion.vmult(new CANNON.Vec3(0, 0, speed), playerBody.velocity);
+      }
+      if (keysPressed[37] && keysPressed[40]) { // left + down
+        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, 5, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
+        playerBody.quaternion.vmult(new CANNON.Vec3(0, 0, -speed), playerBody.velocity);
+      }
+      if (keysPressed[39] && keysPressed[40]) { // right + down
+        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, -5, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
+        playerBody.quaternion.vmult(new CANNON.Vec3(0, 0, -speed), playerBody.velocity);
+      }
+    }
     document.addEventListener('keydown', movePlayer);
 
+    const stopPlayer = (e: { keyCode: any; }) => {
+      const key = e.keyCode;
+      keysPressed[key] = false;
+      speed = 0;
+      // console.log(keysPressed);
+
+
+    }
+    document.addEventListener('keyup', stopPlayer);
 
 
 
