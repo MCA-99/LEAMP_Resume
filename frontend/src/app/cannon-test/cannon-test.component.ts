@@ -238,68 +238,91 @@ export class CannonTestComponent implements OnInit {
     */
     var keysPressed: Array<any> = [];
     let speed = 0;
-    let maxSpeed = 10;
+    let maxSpeed = 12;
+    let minSpeed = -12;
+    let reverse = 0;
 
-
-    const movePlayer = (e: { keyCode: any; }) => {
-      const key = e.keyCode;
-      keysPressed[key] = true;
-
-
-      // console.log(keysPressed);
-
-      // if (keysPressed[37] == true) { // left
-      //   playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, 5, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
-      // }
-      // if (keysPressed[39]) { // right
-      //   playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, -5, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
-      // }
+    function movePlayer() {
+      if (keysPressed[37] && speed != 0) { // left
+        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
+      }
+      if (keysPressed[39] && speed != 0) { // right
+        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, -1, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
+      }
       if (keysPressed[38]) { // up
         if (speed < maxSpeed) {
           speed++;
         }
+        reverse = 1;
         playerBody.quaternion.vmult(new CANNON.Vec3(0, 0, speed), playerBody.velocity);
       }
       if (keysPressed[40]) { // down
         if (speed < maxSpeed) {
           speed++;
         }
+        reverse = 2;
         playerBody.quaternion.vmult(new CANNON.Vec3(0, 0, -speed), playerBody.velocity);
       }
       if (keysPressed[37] && keysPressed[38]) { // left + up
         if (speed < maxSpeed) {
           speed++;
         }
-        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, 3, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
+        reverse = 1;
+        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
         playerBody.quaternion.vmult(new CANNON.Vec3(0, 0, speed), playerBody.velocity);
       }
       if (keysPressed[39] && keysPressed[38]) { // right + up
         if (speed < maxSpeed) {
           speed++;
         }
-        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, -3, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
+        reverse = 1;
+        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, -1, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
         playerBody.quaternion.vmult(new CANNON.Vec3(0, 0, speed), playerBody.velocity);
       }
       if (keysPressed[37] && keysPressed[40]) { // left + down
-        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, 5, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
+        if (speed < maxSpeed) {
+          // speed--;
+        }
+        reverse = 2;
+        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
         playerBody.quaternion.vmult(new CANNON.Vec3(0, 0, -speed), playerBody.velocity);
       }
       if (keysPressed[39] && keysPressed[40]) { // right + down
-        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, -5, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
+        if (speed < maxSpeed) {
+          // speed--;
+        }
+        reverse = 2;
+        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, -1, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
         playerBody.quaternion.vmult(new CANNON.Vec3(0, 0, -speed), playerBody.velocity);
       }
-    }
-    document.addEventListener('keydown', movePlayer);
 
-    const stopPlayer = (e: { keyCode: any; }) => {
+      if (keysPressed[38] == false || keysPressed[40] == false) {
+        reverse = 0;
+        if (reverse == 1) {
+          speed--;
+        } else if (reverse == 2) {
+          speed++;
+        } else {
+          reverse = 0;
+        }
+      }
+
+
+      console.log("speed: ", speed, "\nreverse: ", reverse);
+    }
+
+
+    const detectKeyPress = (e: { keyCode: any; }) => {
+      const key = e.keyCode;
+      keysPressed[key] = true;
+    }
+    document.addEventListener('keydown', detectKeyPress);
+
+    const detectKeyUp = (e: { keyCode: any; }) => {
       const key = e.keyCode;
       keysPressed[key] = false;
-      speed = 0;
-      // console.log(keysPressed);
-
-
     }
-    document.addEventListener('keyup', stopPlayer);
+    document.addEventListener('keyup', detectKeyUp);
 
 
 
@@ -345,6 +368,7 @@ export class CannonTestComponent implements OnInit {
 
       if (delta > interval) { // if enough time has passed
         updatePhysics();
+        movePlayer();
         updateCameraPosition();
         renderer.render(scene, camera); // render scene
         delta = delta % interval; // reset delta
