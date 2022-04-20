@@ -60,7 +60,7 @@ export class CannonTestComponent implements OnInit {
     /*
     * Create a ground plane to latter add physics to it
     */
-    const groundGeo = new THREE.BoxGeometry(50, 50, 0);
+    const groundGeo = new THREE.BoxGeometry(100, 100, 0);
     const groundMat = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       side: THREE.DoubleSide,
@@ -117,7 +117,9 @@ export class CannonTestComponent implements OnInit {
     const playerGeo = new THREE.BoxGeometry(2, 2, 3);
     const playerMat = new THREE.MeshBasicMaterial({
       color: '#fffb00',
-      wireframe: true
+      wireframe: true,
+      // transparent: true,
+      // opacity: 0
     });
     const playerMesh = new THREE.Mesh(playerGeo, playerMat);
 
@@ -154,7 +156,7 @@ export class CannonTestComponent implements OnInit {
 
     const groundBody = new CANNON.Body({
       // shape: new CANNON.Plane(), // (crea un suelo infinito)
-      shape: new CANNON.Box(new CANNON.Vec3(25, 25, 0.1)),
+      shape: new CANNON.Box(new CANNON.Vec3(50, 50, 0.1)),
       type: CANNON.Body.STATIC,
       material: groundPhysMat
     });
@@ -211,7 +213,7 @@ export class CannonTestComponent implements OnInit {
       material: objectPhysMat
     });
     world.addBody(playerBody);
-    playerBody.linearDamping = 0.05;
+    playerBody.linearDamping = 0.5;
     playerBody.angularDamping = 1;
     playerBody.fixedRotation = true;
 
@@ -237,78 +239,79 @@ export class CannonTestComponent implements OnInit {
     * Add keyboard controls to player
     */
     var keysPressed: Array<any> = [];
+    keysPressed[37] = false;
+    keysPressed[38] = false;
+    keysPressed[39] = false;
+    keysPressed[40] = false;
+    keysPressed[16] = false;
     let speed = 0;
-    let maxSpeed = 12;
-    let minSpeed = -12;
-    let reverse = 0;
+    let maxSpeed = 13;
+    let maxReverseSpeed = 8;
+    let minSpeed = 0;
+    let turboSpeed = 30;
+    let rotationSpeed = 0.4;
+
 
     function movePlayer() {
-      if (keysPressed[37] && speed != 0) { // left
-        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
+      if (keysPressed[37] && speed != minSpeed) { // left
+        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, rotationSpeed, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
       }
-      if (keysPressed[39] && speed != 0) { // right
-        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, -1, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
+      if (keysPressed[39] && speed != minSpeed) { // right
+        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, -rotationSpeed, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
       }
       if (keysPressed[38]) { // up
-        if (speed < maxSpeed) {
+        if (keysPressed[16] && speed < turboSpeed) { // turbo
+          speed++;
+        } else if (speed < maxSpeed) {
           speed++;
         }
-        reverse = 1;
         playerBody.quaternion.vmult(new CANNON.Vec3(0, 0, speed), playerBody.velocity);
       }
       if (keysPressed[40]) { // down
-        if (speed < maxSpeed) {
+        if (speed < maxReverseSpeed) {
           speed++;
         }
-        reverse = 2;
         playerBody.quaternion.vmult(new CANNON.Vec3(0, 0, -speed), playerBody.velocity);
       }
       if (keysPressed[37] && keysPressed[38]) { // left + up
-        if (speed < maxSpeed) {
+        if (keysPressed[16] && speed < turboSpeed) { // turbo
+          speed++;
+        } else if (speed < maxSpeed) {
           speed++;
         }
-        reverse = 1;
-        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
+        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, rotationSpeed, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
         playerBody.quaternion.vmult(new CANNON.Vec3(0, 0, speed), playerBody.velocity);
       }
       if (keysPressed[39] && keysPressed[38]) { // right + up
-        if (speed < maxSpeed) {
+        if (keysPressed[16] && speed < turboSpeed) { // turbo
+          speed++;
+        } else if (speed < maxSpeed) {
           speed++;
         }
-        reverse = 1;
-        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, -1, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
+        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, -rotationSpeed, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
         playerBody.quaternion.vmult(new CANNON.Vec3(0, 0, speed), playerBody.velocity);
       }
       if (keysPressed[37] && keysPressed[40]) { // left + down
-        if (speed < maxSpeed) {
-          // speed--;
+        if (speed < maxReverseSpeed) {
+          speed++;
         }
-        reverse = 2;
-        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
+        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, rotationSpeed, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
         playerBody.quaternion.vmult(new CANNON.Vec3(0, 0, -speed), playerBody.velocity);
       }
       if (keysPressed[39] && keysPressed[40]) { // right + down
-        if (speed < maxSpeed) {
-          // speed--;
+        if (speed < maxReverseSpeed) {
+          speed++;
         }
-        reverse = 2;
-        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, -1, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
+        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, -rotationSpeed, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
         playerBody.quaternion.vmult(new CANNON.Vec3(0, 0, -speed), playerBody.velocity);
       }
 
-      if (keysPressed[38] == false || keysPressed[40] == false) {
-        reverse = 0;
-        if (reverse == 1) {
+      // detect if player stop pressing up or down key and set speed to 0 progressively
+      if (!keysPressed[38] && !keysPressed[40]) {
+        if (speed > 0) {
           speed--;
-        } else if (reverse == 2) {
-          speed++;
-        } else {
-          reverse = 0;
         }
       }
-
-
-      console.log("speed: ", speed, "\nreverse: ", reverse);
     }
 
 
