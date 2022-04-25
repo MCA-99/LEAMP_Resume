@@ -62,9 +62,9 @@ export class CannonTestComponent implements OnInit {
     */
     const groundGeo = new THREE.BoxGeometry(100, 100, 0);
     const groundMat = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
+      color: "#757575",
       side: THREE.DoubleSide,
-      wireframe: true
+      // wireframe: true
     });
     const groundMesh = new THREE.Mesh(groundGeo, groundMat);
     scene.add(groundMesh);
@@ -131,7 +131,6 @@ export class CannonTestComponent implements OnInit {
     });
 
     scene.add(playerMesh);
-
 
 
 
@@ -213,7 +212,7 @@ export class CannonTestComponent implements OnInit {
       material: objectPhysMat
     });
     world.addBody(playerBody);
-    playerBody.linearDamping = 0.5;
+    playerBody.linearDamping = 0.99;
     playerBody.angularDamping = 1;
     playerBody.fixedRotation = true;
 
@@ -245,75 +244,97 @@ export class CannonTestComponent implements OnInit {
     keysPressed[40] = false;
     keysPressed[16] = false;
     let speed = 0;
-    let maxSpeed = 13;
-    let maxReverseSpeed = 8;
+    let maxSpeed = 1.3;
+    let maxReverseSpeed = 0.8;
     let minSpeed = 0;
-    let turboSpeed = 30;
-    let rotationSpeed = 0.4;
+    let turboSpeed = 1.8;
+    let rotationSpeed = 0;
+    let maxRotationSpeed = 1;
+    let maxReverseRotationSpeed = 0.8
+    let reverse = false;
+    let incline = 0;
 
 
     function movePlayer() {
-      if (keysPressed[37] && speed != minSpeed) { // left
-        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, rotationSpeed, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
-      }
-      if (keysPressed[39] && speed != minSpeed) { // right
-        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, -rotationSpeed, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
-      }
       if (keysPressed[38]) { // up
         if (keysPressed[16] && speed < turboSpeed) { // turbo
-          speed++;
+          speed = speed + 0.03;
         } else if (speed < maxSpeed) {
-          speed++;
+          speed = speed + 0.03;
         }
-        playerBody.quaternion.vmult(new CANNON.Vec3(0, 0, speed), playerBody.velocity);
+        if (rotationSpeed < maxRotationSpeed) {
+          rotationSpeed = rotationSpeed + 0.02;
+        }
+        reverse = false;
+        playerBody.applyLocalImpulse(new CANNON.Vec3(0, 0, speed), new CANNON.Vec3(0, 0, 0));
       }
       if (keysPressed[40]) { // down
         if (speed < maxReverseSpeed) {
-          speed++;
+          speed = speed + 0.03;
         }
-        playerBody.quaternion.vmult(new CANNON.Vec3(0, 0, -speed), playerBody.velocity);
+        if (rotationSpeed < maxReverseRotationSpeed) {
+          rotationSpeed = rotationSpeed + 0.02;
+        }
+        reverse = true;
+        playerBody.applyLocalImpulse(new CANNON.Vec3(0, 0, -speed), new CANNON.Vec3(0, 0, 0));
       }
-      if (keysPressed[37] && keysPressed[38]) { // left + up
-        if (keysPressed[16] && speed < turboSpeed) { // turbo
-          speed++;
-        } else if (speed < maxSpeed) {
-          speed++;
-        }
+      if (keysPressed[37] && speed != minSpeed) { // left
         playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, rotationSpeed, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
-        playerBody.quaternion.vmult(new CANNON.Vec3(0, 0, speed), playerBody.velocity);
-      }
-      if (keysPressed[39] && keysPressed[38]) { // right + up
-        if (keysPressed[16] && speed < turboSpeed) { // turbo
-          speed++;
-        } else if (speed < maxSpeed) {
-          speed++;
+        if (speed > 0.8 && !keysPressed[40]) {
+          if (incline <= 0.3) {
+            incline = incline + 0.01;
+          }
+          playerMesh.rotation.z = playerMesh.rotation.z + Math.PI / 2 * delta + incline;
         }
+      }
+      if (keysPressed[39] && speed != minSpeed) { // right
         playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, -rotationSpeed, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
-        playerBody.quaternion.vmult(new CANNON.Vec3(0, 0, speed), playerBody.velocity);
-      }
-      if (keysPressed[37] && keysPressed[40]) { // left + down
-        if (speed < maxReverseSpeed) {
-          speed++;
+        if (speed > 0.8) {
+          if (incline <= 0.3) {
+            incline = incline + 0.01;
+          }
+          playerMesh.rotation.z = playerMesh.rotation.z + Math.PI / 2 * delta - incline;
         }
-        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, rotationSpeed, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
-        playerBody.quaternion.vmult(new CANNON.Vec3(0, 0, -speed), playerBody.velocity);
-      }
-      if (keysPressed[39] && keysPressed[40]) { // right + down
-        if (speed < maxReverseSpeed) {
-          speed++;
-        }
-        playerBody.quaternion = new CANNON.Quaternion().setFromAxisAngle(new CANNON.Vec3(0, -rotationSpeed, 0), Math.PI / 2 * delta).mult(playerBody.quaternion);
-        playerBody.quaternion.vmult(new CANNON.Vec3(0, 0, -speed), playerBody.velocity);
       }
 
       // detect if player stop pressing up or down key and set speed to 0 progressively
       if (!keysPressed[38] && !keysPressed[40]) {
-        if (speed > 0) {
-          speed--;
+        if (speed > 0 && reverse == false) {
+          speed = speed - 0.025;
+          playerBody.applyLocalImpulse(new CANNON.Vec3(0, 0, speed), new CANNON.Vec3(0, 0, 0));
+          if (rotationSpeed > 0) {
+            rotationSpeed = rotationSpeed - 0.025;
+          }
+        } else if (speed > 0 && reverse == true) {
+          speed = speed - 0.025;
+          playerBody.applyLocalImpulse(new CANNON.Vec3(0, 0, -speed), new CANNON.Vec3(0, 0, 0));
+          if (rotationSpeed > 0) {
+            rotationSpeed = rotationSpeed - 0.025;
+          }
         }
       }
-    }
 
+      // detect if player stop pressing left or right key and set inclination to 0 progressively
+      if (!keysPressed[37] && !keysPressed[39]) {
+        if (incline > 0) {
+          incline = incline - 0.01;
+        }
+      }
+
+
+      // Sanitize speeds values
+      if (speed < 0) {
+        speed = 0;
+      }
+      if (rotationSpeed < 0) {
+        rotationSpeed = 0;
+      }
+      if (incline < 0) {
+        incline = 0;
+      }
+
+      console.log("speed:" + speed + "\nrotationSpeed:" + rotationSpeed + "\nincline:" + incline);
+    }
 
     const detectKeyPress = (e: { keyCode: any; }) => {
       const key = e.keyCode;
